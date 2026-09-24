@@ -1,23 +1,27 @@
 from kafka import KafkaProducer
 import json
-import time
+
 
 producer = KafkaProducer(
-    bootstrap_servers='localhost:9092',
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    bootstrap_servers="localhost:9092",
+    value_serializer=lambda value: json.dumps(value).encode("utf-8")
 )
 
-print("🚀 Kafka Producer Started")
 
-while True:
-
+def publish_payment_requested(ride_id):
     event = {
-        "ride_id": 101,
+        "ride_id": ride_id,
         "event": "payment_requested"
     }
 
-    producer.send("payment-events", event)
+    future = producer.send("payment-events", event)
+    metadata = future.get(timeout=10)
 
-    print(f"📤 Sent Event: {event}")
+    print(
+        f"📤 Kafka accepted: "
+        f"ride_id={ride_id}, "
+        f"partition={metadata.partition}, "
+        f"offset={metadata.offset}"
+    )
 
-    time.sleep(5)
+    return metadata

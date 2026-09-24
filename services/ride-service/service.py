@@ -2,6 +2,7 @@
 
 from repository import create_ride, get_ride, update_status, create_event
 from event import emit_event
+from kafka_producer import publish_payment_requested
 
 ALLOWED_TRANSITIONS = {
     "requested": ["assigned", "cancelled"],
@@ -57,6 +58,7 @@ def update_ride_status(ride_id, new_status):
     # Create async payment event
     if new_status == "completed":
         create_event(ride_id, "payment_requested")
+        publish_payment_requested(ride_id)
 
     # Emit internal event
     emit_event(
